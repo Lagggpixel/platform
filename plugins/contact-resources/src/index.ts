@@ -14,8 +14,16 @@
 // limitations under the License.
 //
 
-import { type Channel, type Contact, getGravatarUrl, getName, type Person } from '@hcengineering/contact'
 import {
+  type Channel,
+  type Contact,
+  getGravatarUrl,
+  getName,
+  type Person,
+  type PersonAccount
+} from '@hcengineering/contact'
+import {
+  DocManager,
   type Class,
   type Client,
   type DocumentQuery,
@@ -108,6 +116,7 @@ import EditOrganizationPanel from './components/EditOrganizationPanel.svelte'
 import ChannelIcon from './components/ChannelIcon.svelte'
 import CreateGuest from './components/CreateGuest.svelte'
 import SpaceMembersEditor from './components/SpaceMembersEditor.svelte'
+import { AggregationManager } from '@hcengineering/view-resources'
 
 import contact from './plugin'
 import {
@@ -127,8 +136,10 @@ import {
   getCurrentEmployeeName,
   getCurrentEmployeePosition,
   getPersonTooltip,
+  grouppingPersonManager,
   resolveLocation
 } from './utils'
+import { writable } from 'svelte/store'
 
 export * from './utils'
 export { employeeByIdStore, employeesStore } from './utils'
@@ -279,6 +290,16 @@ async function openChannelURL (doc: Channel): Promise<void> {
   }
 }
 
+function filterPerson (doc: PersonAccount, target: PersonAccount): boolean {
+  return doc.person === target.person && doc._id !== target._id
+}
+
+export const personStore = writable<DocManager<PersonAccount>>(new DocManager([]))
+
+function setStore (manager: DocManager<PersonAccount>): void {
+  personStore.set(manager)
+}
+
 export interface PersonLabelTooltip {
   personLabel?: IntlString
   placeholderLabel?: IntlString
@@ -390,9 +411,16 @@ export default async (): Promise<Resources> => ({
     ContactTitleProvider: contactTitleProvider,
     PersonTooltipProvider: getPersonTooltip,
     ChannelTitleProvider: channelTitleProvider,
-    ChannelIdentifierProvider: channelIdentifierProvider
+    ChannelIdentifierProvider: channelIdentifierProvider,
+    SetPersonStore: setStore,
+    PersonFilterFunction: filterPerson
   },
   resolver: {
     Location: resolveLocation
+  },
+  aggregation: {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    CreatePersonAggregationManager: AggregationManager.create,
+    GrouppingPersonManager: grouppingPersonManager
   }
 })
