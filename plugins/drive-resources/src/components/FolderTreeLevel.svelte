@@ -79,7 +79,7 @@
       }}
     >
       <svelte:fragment slot="dropbox">
-        {#if (desc.length > 0) && !once}
+        {#if desc.length > 0 && !once}
           <svelte:self folders={desc} {descendants} {folderById} {selected} level={level + 1} on:selected />
         {/if}
       </svelte:fragment>
